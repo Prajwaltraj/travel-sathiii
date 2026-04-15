@@ -25,7 +25,7 @@ We have implemented the following NLP techniques on our Python backend:
 - NLP Libraries: <span style="color:#2980B9;">SpaCy, Sklearn, and NLTK</span>  
 
 📊 **Dataset Reference**  
-- Name: <span style="color:#D35400;">[Insert Name of Dataset, e.g., Kaggle World Tourism Dataset]</span>  
+- Name: <span style="color:#D35400;">[Hugging face-  "https://datasets-server.huggingface.co/rows?dataset=bitext%2FBitext-travel-llm-chatbot-training-dataset&config=default&split=train&offset=0&length=100"]</span>  
 - Usage: Used to train the Intent Classifier and provide destination-specific data for the chatbot's responses.  
 
 ---
