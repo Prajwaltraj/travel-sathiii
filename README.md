@@ -1,4 +1,4 @@
-Travel Sathi — NLP Travel Companion
+**Travel Sathi — NLP Travel Companion**
 Domain: ✈️ Travel
 
 Hackathon: Hack4Hour 2026

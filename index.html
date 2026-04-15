@@ -2,131 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Travel Sathi - Your AI Navigator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel-Sathiii | AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 1. Background with Plane Taking Off */
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('https://images.unsplash.com/photo-1506012733851-bb60a332ea35?auto=format&fit=crop&w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-        }
-
-        /* 2. Glassmorphism Chat Window */
-        .chat-container {
-            width: 400px;
-            height: 600px;
-            background: rgba(255, 255, 255, 0.15); /* Semi-transparent */
-            backdrop-filter: blur(15px); /* Frosty effect */
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .chat-header {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        #chat-box {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            color: white;
-        }
-
-        .message { margin-bottom: 15px; padding: 10px; border-radius: 10px; max-width: 80%; }
-        .user { background: rgba(0, 123, 255, 0.4); align-self: flex-end; margin-left: auto; }
-        .bot { background: rgba(255, 255, 255, 0.2); align-self: flex-start; }
-
-        .input-area {
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 20px;
-            border: none;
-            outline: none;
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        button {
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: none;
-            background: #ff6b6b; /* Travel-themed coral color */
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .chat-container { height: calc(100vh - 160px); }
+        .message-user { background: #3b82f6; color: white; align-self: flex-end; border-radius: 15px 15px 0 15px; }
+        .message-bot { background: #f3f4f6; color: #1f2937; align-self: flex-start; border-radius: 15px 15px 15px 0; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 font-sans">
 
-<div class="chat-container">
-    <div class="chat-header">✈️ Travel Sathi</div>
-    <div id="chat-box">
-        <div class="message bot">Hello! Ready to fly? Ask me anything about your next trip!</div>
-    </div>
-    <div class="input-area">
-        <input type="text" id="user-input" placeholder="Where to next?">
-        <button onclick="sendMessage()">Send</button>
-    </div>
-</div>
+    <nav class="bg-white shadow-sm p-4 flex justify-between items-center px-8">
+        <h1 class="text-xl font-bold text-blue-600">Travel-Sathiii ✈️</h1>
+        <div class="text-sm text-gray-500">FastAPI + Ollama</div>
+    </nav>
 
-<script>
-    async function sendMessage() {
-        const input = document.getElementById('user-input');
+    <main class="max-w-4xl mx-auto mt-6 p-4">
+        <div id="chat-box" class="chat-container overflow-y-auto flex flex-col space-y-4 p-4 border rounded-xl bg-white shadow-inner">
+            <div class="message-bot p-3 max-w-[80%]">
+                Hello! I'm your Travel-Sathi. How can I help you plan your journey today?
+            </div>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+            <input type="text" id="user-input" placeholder="Ask about destinations, hotels, or flights..." 
+                class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button onclick="sendMessage()" id="send-btn" 
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Send
+            </button>
+        </div>
+        
+        <div id="status" class="text-xs text-gray-400 mt-2 ml-1 italic"></div>
+    </main>
+
+    <script>
         const chatBox = document.getElementById('chat-box');
-        const message = input.value;
-        if (!message) return;
+        const userInput = document.getElementById('user-input');
+        const status = document.getElementById('status');
 
-        // 1. Show User Message
-        chatBox.innerHTML += `<div class="message user">${message}</div>`;
-        input.value = '';
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
 
-        // 2. Call FastAPI Backend
-        try {
-            const response = await fetch('http://localhost:8000/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
-            });
-            const data = await response.json();
+            // Append User Message
+            appendMessage(message, 'user');
+            userInput.value = '';
+            status.innerText = "Sathiii is thinking...";
 
-            // 3. Show Bot Response
-            chatBox.innerHTML += `<div class="message bot">${data.reply}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
+            try {
+                const response = await fetch('http://localhost:8000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
 
-            // 4. Play Audio Automatically
-            const audio = new Audio(data.audio_url);
-            audio.play();
+                const data = await response.json();
+                
+                // Append Bot Message
+                appendMessage(data.reply, 'bot');
+                status.innerText = "";
 
-        } catch (error) {
-            console.error("Error:", error);
-            chatBox.innerHTML += `<div class="message bot">System error. Is the backend running?</div>`;
+                // Play Voice Response
+                if (data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play();
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                appendMessage("Sorry, I'm having trouble connecting to the server.", 'bot');
+                status.innerText = "";
+            }
         }
-    }
-</script>
 
+        function appendMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `p-3 max-w-[80%] ${sender === 'user' ? 'message-user' : 'message-bot'}`;
+            div.innerText = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Allow "Enter" key to send
+        userInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
 </body>
 </html>
