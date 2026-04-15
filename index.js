@@ -12,13 +12,13 @@ export const getPlacesData = async (sw, ne) => {
         tr_longitude: ne.lng,
       },
       headers: {
-        'x-rapidapi-key': 'curl -X GET \
-     "https://datasets-server.huggingface.co/rows?dataset=bitext%2FBitext-travel-llm-chatbot-training-dataset&config=default&split=train&offset=0&length=100"',
-        'x-rapidapi-host': 'travel-advisor.p.rapidapi.com'
-      }
+        'X-RapidAPI-Key': process.env.REACT_APP_RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'travel-advisor.p.rapidapi.com',
+      },
     });
     return data;
   } catch (error) {
-    console.log(error);
+    console.error('Places API fetch error:', error);
+    return [];
   }
 };

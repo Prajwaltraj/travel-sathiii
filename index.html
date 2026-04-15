@@ -1,93 +1,221 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel-Sathiii | AI Assistant</title>
+    <title>Travel-Sathiii</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .chat-container { height: calc(100vh - 160px); }
-        .message-user { background: #3b82f6; color: white; align-self: flex-end; border-radius: 15px 15px 0 15px; }
-        .message-bot { background: #f3f4f6; color: #1f2937; align-self: flex-start; border-radius: 15px 15px 15px 0; }
-    </style>
-</head>
-<body class="bg-gray-50 font-sans">
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+        }
 
-    <nav class="bg-white shadow-sm p-4 flex justify-between items-center px-8">
-        <h1 class="text-xl font-bold text-blue-600">Travel-Sathiii ✈️</h1>
-        <div class="text-sm text-gray-500">FastAPI + Ollama</div>
-    </nav>
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
-    <main class="max-w-4xl mx-auto mt-6 p-4">
-        <div id="chat-box" class="chat-container overflow-y-auto flex flex-col space-y-4 p-4 border rounded-xl bg-white shadow-inner">
-            <div class="message-bot p-3 max-w-[80%]">
-                Hello! I'm your Travel-Sathi. How can I help you plan your journey today?
-            </div>
-        </div>
+        .aviation-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
 
-        <div class="mt-4 flex gap-2">
-            <input type="text" id="user-input" placeholder="Ask about destinations, hotels, or flights..." 
-                class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <button onclick="sendMessage()" id="send-btn" 
-                class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-                Send
-            </button>
-        </div>
-        
-        <div id="status" class="text-xs text-gray-400 mt-2 ml-1 italic"></div>
-    </main>
+        .plane-icon {
+            display: inline-block;
+            animation: fly 6s linear infinite;
+        }
 
-    <script>
-        const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
-        const status = document.getElementById('status');
+        @keyframes fly {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100vw); }
+        }
 
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
+        .chat-bubble {
+            border-radius: 18px;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+        }
 
-            // Append User Message
-            appendMessage(message, 'user');
-            userInput.value = '';
-            status.innerText = "Sathiii is thinking...";
-
-            try {
-                const response = await fetch('http://localhost:8000/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
-                });
-
-                const data = await response.json();
-                
-                // Append Bot Message
-                appendMessage(data.reply, 'bot');
-                status.innerText = "";
-
-                // Play Voice Response
-                if (data.audio_url) {
-                    const audio = new Audio(data.audio_url);
-                    audio.play();
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                appendMessage("Sorry, I'm having trouble connecting to the server.", 'bot');
-                status.innerText = "";
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
+    </style>
+</head>
+<body class="p-10">
+    <div class="max-w-2xl mx-auto aviation-card rounded-2xl p-6">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent border-b-4 border-blue-400 pb-4">✈️ Travel-Sathiii</h1>
+        <p class="text-gray-500 text-sm mt-2 mb-4">Your AI Travel Companion</p>
+        
+        <!-- Debug Panel -->
+        <div id="debugPanel" class="bg-gray-100 border border-gray-300 rounded p-2 mb-3 text-xs font-mono text-gray-600 max-h-20 overflow-y-auto">
+            <div id="debugLog">Loading...</div>
+        </div>
+        
+        <div id="chat" class="h-96 overflow-y-auto my-4 p-4 border-2 border-blue-200 rounded-xl bg-gradient-to-b from-blue-50 to-purple-50 flex flex-col space-y-3"></div>
+        <div id="status" class="text-sm text-gray-600 mb-3 font-semibold"></div>
+        <div class="flex gap-2">
+            <input id="msg" type="text" class="flex-1 border-2 border-blue-300 p-3 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 placeholder-gray-400" placeholder="Ask about destinations, hotels, travel tips...">
+            <button type="button" id="sendBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition transform hover:scale-105 shadow-lg">Send ✈️</button>
+        </div>
+    </div>
 
-        function appendMessage(text, sender) {
-            const div = document.createElement('div');
-            div.className = `p-3 max-w-[80%] ${sender === 'user' ? 'message-user' : 'message-bot'}`;
-            div.innerText = text;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+    <script>
+    const debugLog = [];
+    function debug(msg) {
+        const time = new Date().toLocaleTimeString();
+        const logEntry = `[${time}] ${msg}`;
+        debugLog.push(logEntry);
+        if (debugLog.length > 10) debugLog.shift();
+        
+        const debugPanel = document.getElementById('debugLog');
+        if (debugPanel) {
+            debugPanel.textContent = debugLog.join('\n');
+            debugPanel.parentElement.scrollTop = debugPanel.parentElement.scrollHeight;
+        }
+        console.log(msg);
+    }
+
+    debug('Page loaded, initializing...');
+    function appendMessage(sender, message, isUser = false) {
+        debug(`appendMessage: sender="${sender}", isUser=${isUser}, len=${String(message).length}`);
+        
+        const chat = document.getElementById('chat');
+        if (!chat) {
+            debug('❌ Chat div not found!');
+            return;
         }
 
-        // Allow "Enter" key to send
-        userInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") sendMessage();
-        });
-    </script>
+        const wrapper = document.createElement('div');
+        
+        if (isUser) {
+            wrapper.className = 'chat-bubble bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-lg my-1 text-right shadow-md';
+            wrapper.style.marginLeft = 'auto';
+            wrapper.style.maxWidth = '80%';
+        } else {
+            wrapper.className = 'chat-bubble bg-gradient-to-r from-purple-100 to-pink-100 text-gray-800 p-3 rounded-lg my-1 text-left shadow-md border-l-4 border-purple-400';
+            wrapper.style.marginRight = 'auto';
+            wrapper.style.maxWidth = '80%';
+        }
+
+        const strong = document.createElement('strong');
+        strong.textContent = `${sender}: `;
+        strong.className = isUser ? 'text-white' : 'text-purple-700';
+        strong.style.display = 'block';
+        strong.style.marginBottom = '5px';
+
+        const text = document.createElement('div');
+        text.textContent = String(message);
+        text.style.whiteSpace = 'pre-wrap';
+        text.style.wordWrap = 'break-word';
+        text.style.lineHeight = '1.4';
+        text.style.fontSize = '14px';
+
+        wrapper.appendChild(strong);
+        wrapper.appendChild(text);
+        chat.appendChild(wrapper);
+        chat.scrollTop = chat.scrollHeight;
+        
+        debug(`✅ Message added to chat (total: ${chat.children.length})`);
+    }
+
+    function setStatus(message, isError = false) {
+        const status = document.getElementById('status');
+        status.textContent = message;
+        status.className = `text-sm ${isError ? 'text-red-600' : 'text-blue-600'} mb-3 font-semibold`;
+        debug(message);
+    }
+
+    function initGreeting() {
+        debug('💬 Greeting initialized');
+        setStatus('Ready to chat.');
+        appendMessage('Sathiii', 'Hello! I am Travel-Sathiii. Ask me about destinations, hotels, restaurants, or travel tips.');
+    }
+
+    async function send() {
+        const input = document.getElementById('msg');
+        const userMsg = input.value.trim();
+        if (!userMsg) {
+            debug('Cancelled: empty message');
+            return;
+        }
+
+        debug('📤 Sending: ' + userMsg);
+        appendMessage('You', userMsg, true);
+        input.value = "";
+        setStatus('Sending request to backend...');
+
+        try {
+            debug('🔗 Fetching http://127.0.0.1:8000/chat');
+            
+            const res = await fetch('http://127.0.0.1:8000/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: userMsg})
+            });
+
+            debug(`📥 HTTP ${res.status}`);
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            debug(`📦 Response received (${String(data.reply || '').length} chars)`);
+
+            const botText = (data.reply && String(data.reply).trim()) || "No response";
+            debug('✅ Displaying bot response');
+            
+            appendMessage('Sathiii', botText);
+            setStatus('✅ Response received successfully');
+
+            if (data.audio_url) {
+                try {
+                    const audio = new Audio(data.audio_url);
+                    audio.volume = 0.5;
+                    await audio.play();
+                    debug('🔊 Playing audio');
+                } catch (audioErr) {
+                    debug('⚠️ Audio play failed: ' + audioErr.message);
+                }
+            }
+        } catch (e) {
+            debug('❌ Error: ' + e.message);
+            setStatus(`❌ Error: ${e.message}`, true);
+            appendMessage('System', 'Error: ' + e.message);
+        }
+    }
+
+    // Send button click logic
+    document.getElementById("sendBtn").addEventListener("click", function(event) {
+        debug('📌 Send button clicked');
+        event.preventDefault();
+        send();
+    });
+
+    // The Enter key logic
+    document.getElementById("msg").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            debug('📌 Enter key pressed');
+            event.preventDefault();
+            send();
+        }
+    });
+
+    window.addEventListener('load', function() {
+        debug('🎉 Page fully loaded');
+        initGreeting();
+    });
+</script>
 </body>
 </html>
